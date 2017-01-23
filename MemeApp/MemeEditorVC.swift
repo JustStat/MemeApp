@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  MemeEditorVC.swift
 //  MemeApp
 //
 //  Created by Kirill Varlamov on 23.01.17.
@@ -8,7 +8,20 @@
 
 import UIKit
 
-class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
+struct Constants {
+    static let defaultTextSize : CGFloat = 40
+    static let defaultStrokeWidth : CGFloat = -3
+}
+
+struct Meme {
+    let topText: String
+    let bottomText: String
+    let originalImage: UIImage
+    let memedImage: UIImage
+    
+}
+
+class MemeEditorVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
 
     @IBOutlet weak var mainImageView: UIImageView!
     @IBOutlet weak var cameraButton: UIBarButtonItem!
@@ -18,27 +31,29 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        subscribeToKeyboardNotifications()
         cameraButton.isEnabled = UIImagePickerController.isSourceTypeAvailable(.camera)
-        topTextField.delegate = self
-        bottomTextField.delegate = self
-        topTextField.isHidden = true
-        bottomTextField.isHidden = true
+        setTextFieldStyle(textField: topTextField, text: "Top text")
+        setTextFieldStyle(textField: bottomTextField, text: "Bottom text")
+    }
+    
+    func setTextFieldStyle(textField: UITextField, text: String) {
+        textField.isHidden = true
         
         let memeTextAttributes:[String:Any] = [
             NSStrokeColorAttributeName: UIColor.black,
             NSForegroundColorAttributeName: UIColor.white,
-            NSStrokeWidthAttributeName: -3,
-            NSFontAttributeName: UIFont(name: "HelveticaNeue-CondensedBlack", size: 40)!]
+            NSStrokeWidthAttributeName: Constants.defaultStrokeWidth,
+            NSFontAttributeName: UIFont(name: "HelveticaNeue-CondensedBlack", size: Constants.defaultTextSize)!]
+        textField.defaultTextAttributes = memeTextAttributes
+        textField.attributedPlaceholder = NSAttributedString.init(string: text, attributes: memeTextAttributes)
+        textField.textAlignment = .center
         
-        topTextField.defaultTextAttributes = memeTextAttributes
-        bottomTextField.defaultTextAttributes = memeTextAttributes
         
-        topTextField.attributedPlaceholder = NSAttributedString.init(string: "Top Text", attributes: memeTextAttributes)
-        bottomTextField.attributedPlaceholder = NSAttributedString.init(string: "Bottom Text", attributes: memeTextAttributes)
-
-        topTextField.textAlignment = .center
-        bottomTextField.textAlignment = .center
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        subscribeToKeyboardNotifications()
     }
     
     override func viewWillDisappear(_ animated: Bool) {
@@ -54,20 +69,32 @@ class ViewController: UIViewController, UIImagePickerControllerDelegate, UINavig
         
     }
     
-    @IBAction func shareImage(_ sender: Any) {
+    func generateMeme() -> UIImage {
         UIGraphicsBeginImageContext(self.mainImageView.frame.size)
         view.drawHierarchy(in: self.view.frame, afterScreenUpdates: true)
         let memedImage:UIImage = UIGraphicsGetImageFromCurrentImageContext()!
         UIGraphicsEndImageContext()
+        
+        return memedImage
 
-        let activityController = UIActivityViewController(activityItems: [memedImage], applicationActivities: nil)
+    }
+    
+    @IBAction func shareImage(_ sender: Any) {
+        let activityController = UIActivityViewController(activityItems: [generateMeme()], applicationActivities: nil)
+        activityController.completionWithItemsHandler = completionHandler
         present(activityController, animated: true, completion: nil)
+    }
+    
+    func completionHandler(activityType: UIActivityType?, shared: Bool, items: [Any]?, error: Error?) {
+        if (shared) {
+             let meme = Meme(topText: topTextField.text!, bottomText: bottomTextField.text!, originalImage: mainImageView.image!, memedImage: generateMeme())
+            print(meme)
+        }
     }
     
     //MARK: imagePickerDelegateMethods
     
     func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-        print("Cancel")
         picker.dismiss(animated: true, completion: nil)
     }
     
