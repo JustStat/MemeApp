@@ -13,14 +13,6 @@ struct Constants {
     static let defaultStrokeWidth : CGFloat = -3
 }
 
-struct Meme {
-    let topText: String
-    let bottomText: String
-    let originalImage: UIImage
-    let memedImage: UIImage
-    
-}
-
 class MemeEditorVC: UIViewController, UIImagePickerControllerDelegate, UINavigationControllerDelegate, UITextFieldDelegate {
 
     @IBOutlet weak var mainImageView: UIImageView!
@@ -121,7 +113,9 @@ class MemeEditorVC: UIViewController, UIImagePickerControllerDelegate, UINavigat
     //MARK: Work with Keyboard
     
     func keyboardWillShow(_ notification:Notification) {
-        view.frame.origin.y = 0 - getKeyboardHeight(notification)
+        if bottomTextField.isFirstResponder {
+            view.frame.origin.y = 0 - getKeyboardHeight(notification)
+        }
     }
     
     func keyboardWillHide(_ notification:Notification) {
