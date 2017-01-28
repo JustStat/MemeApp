@@ -80,7 +80,9 @@ class MemeEditorVC: UIViewController, UIImagePickerControllerDelegate, UINavigat
     func completionHandler(activityType: UIActivityType?, shared: Bool, items: [Any]?, error: Error?) {
         if (shared) {
              let meme = Meme(topText: topTextField.text!, bottomText: bottomTextField.text!, originalImage: mainImageView.image!, memedImage: generateMeme())
-            print(meme)
+            let appDelegate = UIApplication.shared.delegate as! AppDelegate
+            appDelegate.memes.append(meme)
+            self.dismiss(animated: true, completion: nil)
         }
     }
     
